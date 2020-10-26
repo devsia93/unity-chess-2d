@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using ChessEngine;
 
 namespace test
@@ -12,12 +13,25 @@ namespace test
             while (true)
             {
                 Console.WriteLine(chess.Fen);
+                Console.WriteLine(ChessToAscii(chess));
                 string move = Console.ReadLine();
                 if (move == "")
                     break;
                 chess = chess.Move(move);
             }
 
+        }
+
+        static string ChessToAscii(Chess chess)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int y = 7; y >= 0; y--)
+            {
+                for (int x = 0; x < 8; x++)
+                    sb.Append(chess.GetPositionFigure(x, y) + " ");
+                sb.AppendLine();
+            }
+            return sb.ToString();
         }
     }
 }

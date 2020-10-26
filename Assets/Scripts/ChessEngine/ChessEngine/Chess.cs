@@ -3,23 +3,45 @@ namespace ChessEngine
 {
     public class Chess
     {
-        public string Fen { get; private set; }
+        BoardController boardController;
+        Moves moves;
+
+        public string Fen 
+        {
+            get
+            {
+                return boardController.Fen;
+            }
+        }
+
         public Chess(string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
         {
-            this.Fen = fen;
+            boardController = new BoardController(fen);
+            moves = new Moves(boardController);
+        }
+
+        Chess(BoardController boardController)
+        {
+            this.boardController = boardController;
+            this.moves = new Moves(boardController);
         }
 
         public Chess Move(string move)
         {
-            Chess newChessEngine = new Chess(Fen);
+            MoveController moveController = new MoveController(move);
+            if (!moves.CanMove(moveController))
+                return this;
+
+            BoardController newBC = boardController.Move(moveController);
+            Chess newChessEngine = new Chess(newBC);
             return newChessEngine;
         }
 
-        public string GetPositionFigure(int x, int y)
+        public char GetPositionFigure(int x, int y)
         {
             Cell cell = new Cell(x, y);
-            string name = cell.Name;
-            return name;
+            Figure figure = boardController.GetFigureAtCell(cell);
+            return figure == Figure.none ? '.' : (char)figure;
         }
 
     }
