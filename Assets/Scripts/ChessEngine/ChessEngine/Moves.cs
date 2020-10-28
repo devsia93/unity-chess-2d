@@ -14,10 +14,44 @@ namespace ChessEngine
         public bool CanMove(MoveController mc)
         {
             this.moveController = mc;
-            return CanMoveCurrent() && CanMoveNew();
+            return CanMoveCurrent() && CanMoveNew() && CanFigureMove();
         }
 
-         bool CanMoveCurrent()
+        private bool CanFigureMove()
+        {
+            switch (moveController.CurrentFigure)
+            {
+                case Figure.whiteKing:
+                case Figure.blackKing:
+                    return CheckMovesKing();
+                case Figure.whiteQueen:
+                case Figure.blackQueen:
+                    return false;
+                case Figure.whiteRook:
+                case Figure.blackRook:
+                    return false;
+                case Figure.whiteBishop:
+                case Figure.blackBishop:
+                    return false;
+                case Figure.whiteKnight:
+                case Figure.blackKnight:
+                    return false;
+                case Figure.whitePawn:
+                case Figure.blackPawn:
+                    return false;
+                default:
+                    return false;
+            }
+        }
+
+        private bool CheckMovesKing()
+        {
+            return (moveController.AbsDifferenceX <= Constants.DIF_KING_X) &&
+            (moveController.AbsDifferenceY <= Constants.DIF_KING_Y);
+
+        } 
+
+        bool CanMoveCurrent()
         {
             return moveController.CurrentCell.CheckOnBoard() &&
                 moveController.CurrentFigure.GetColor() == 

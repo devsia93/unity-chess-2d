@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+
 namespace ChessEngine
 {
     public class Chess
@@ -44,6 +46,16 @@ namespace ChessEngine
             return figure == Figure.none ? '.' : (char)figure;
         }
 
+        public IEnumerable<string> YieldValidMoves()
+        {
+            foreach (FigureOnCell fc in boardController.YieldFiguresOnCell())
+                foreach (Cell cell in Cell.YieldBoardCells())
+                {
+                    MoveController mc = new MoveController(fc, cell);
+                    if (moves.CanMove(mc))
+                        yield return mc.ToString();
+                }
+        }
     }
 }
 

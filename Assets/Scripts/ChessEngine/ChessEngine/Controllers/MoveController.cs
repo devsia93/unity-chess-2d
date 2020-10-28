@@ -25,5 +25,11 @@ namespace ChessEngine
                 this.Transformation = (Figure)move[5];
             else this.Transformation = Figure.none;
         }
+
+        public override string ToString()
+        {
+            return ((char)CurrentFigure).ToString() + CurrentCell.Name + 
+            NewCell.Name;
+        }
     }
 }

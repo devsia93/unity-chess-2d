@@ -1,9 +1,9 @@
 ﻿using System;
 namespace ChessEngine
 {
-    public class BoardController
+     class BoardController
     {
-        private [,] figures;
+        private Figure [,] figures;
 
         public string Fen { get; private set; }
         public Color CurrentMoveColor { get; private set; }
@@ -42,7 +42,7 @@ namespace ChessEngine
         {
             SetFigureAtCell(new Cell("a2"), Figure.whitePawn);
             SetFigureAtCell(new Cell("h6"), Figure.blackPawn);
-            CurrentMoveColor = Color.White
+            CurrentMoveColor = Color.White;
         }
     }
 }

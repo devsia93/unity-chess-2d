@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+
 namespace ChessEngine
 {
     struct Cell
@@ -31,13 +33,24 @@ namespace ChessEngine
         {
             get
             {
-                return ((char)('a' + x)).ToString() + (y + 1).ToString();
+                if (CheckOnBoard())
+                    return ((char)('a' + x)).ToString() + (y + 1).ToString();
+                else return "-";
             }
         }
 
         public bool CheckOnBoard()
         {
             return (x >= 0 && x < Constants.COUNT_SQUARES) && (y >= 0 && y < Constants.COUNT_SQUARES);
+        }
+
+        public static IEnumerable<Cell> YieldBoardCells()
+        {
+            for (int i = 0; i < Constants.COUNT_SQUARES; i++)
+                for (int j = 0; j < Constants.COUNT_SQUARES; j++)
+                {
+                    yield return new Cell(j, i);
+                }
         }
     }
 }
