@@ -35,13 +35,21 @@ namespace ChessEngine
                     return false;
                 case Figure.whiteKnight:
                 case Figure.blackKnight:
-                    return false;
+                    return CheckMovesKnight();
                 case Figure.whitePawn:
                 case Figure.blackPawn:
                     return false;
                 default:
                     return false;
             }
+        }
+
+        private bool CheckMovesKnight()
+        {
+            return moveController.AbsDifferenceX == Constants.DIF_KNIGHT_X_1 &&
+                moveController.AbsDifferenceY == Constants.DIF_KNIGHT_Y_2 ||
+                moveController.AbsDifferenceX == Constants.DIF_KNIGHT_X_2 &&
+                moveController.AbsDifferenceY == Constants.DIF_KNIGHT_Y_1;
         }
 
         private bool CheckMovesKing()

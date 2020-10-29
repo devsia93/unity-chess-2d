@@ -8,6 +8,12 @@ namespace ChessEngine
         public Cell NewCell { get; private set; }
         public Figure Transformation { get; private set; }
 
+        public int DifferenceX {  get { return NewCell.x - CurrentCell.x; } }
+        public int DifferenceY { get { return NewCell.y - CurrentCell.y; } }
+        public int AbsDifferenceX { get { return Math.Abs(DifferenceX); } }
+        public int AbsDifferenceY { get { return Math.Abs(DifferenceY); } }
+
+
         public MoveController(FigureOnCell figureOnCell, Cell newCell, Figure transformation = Figure.none)
         {
             this.CurrentFigure = figureOnCell.figure;

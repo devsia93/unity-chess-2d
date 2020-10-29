@@ -14,6 +14,10 @@ namespace test
             {
                 Console.WriteLine(chess.Fen);
                 Console.WriteLine(ChessToAscii(chess));
+
+                foreach (string moves in chess.YieldValidMoves())
+                    Console.WriteLine(moves);
+
                 string move = Console.ReadLine();
                 if (move == "")
                     break;
