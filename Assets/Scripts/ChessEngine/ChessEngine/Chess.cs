@@ -50,11 +50,12 @@ namespace ChessEngine
         {
             foreach (FigureOnCell fc in boardController.YieldFiguresOnCell())
                 foreach (Cell cell in Cell.YieldBoardCells())
-                {
-                    MoveController mc = new MoveController(fc, cell);
-                    if (moves.CanMove(mc))
-                        yield return mc.ToString();
-                }
+                    foreach(Figure transformation in fc.figure.YieldTransformations(cell))
+                    {
+                        MoveController mc = new MoveController(fc, cell, transformation);
+                        if (moves.CanMove(mc))
+                            yield return mc.ToString();
+                    }
         }
     }
 }

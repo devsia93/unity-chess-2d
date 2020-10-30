@@ -41,7 +41,8 @@ namespace ChessEngine
 
         public bool CheckOnBoard()
         {
-            return (x >= 0 && x < Constants.COUNT_SQUARES) && (y >= 0 && y < Constants.COUNT_SQUARES);
+            return (x >= 0 && x < Constants.COUNT_SQUARES) && 
+            (y >= 0 && y < Constants.COUNT_SQUARES);
         }
 
         public static IEnumerable<Cell> YieldBoardCells()
@@ -52,5 +53,30 @@ namespace ChessEngine
                     yield return new Cell(j, i);
                 }
         }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is Cell))
+            {
+                return false;
+            }
+
+            var cell = (Cell)obj;
+            return x == cell.x &&
+                   y == cell.y;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = 1502939027;
+            hashCode = hashCode * -1521134295 + x.GetHashCode();
+            hashCode = hashCode * -1521134295 + y.GetHashCode();
+            return hashCode;
+        }
+
+        public static bool operator ==(Cell a, Cell b) => a.x == b.x && a.y == b.y;
+
+        public static bool operator !=(Cell a, Cell b) => !(a == b);
+
     }
 }

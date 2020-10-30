@@ -8,7 +8,7 @@ namespace test
     {
         public static void Main(string[] args)
         {
-            Chess chess = new Chess();
+            Chess chess = new Chess("r3k2r/p6p/8/8/8/8/P6P/R3K2R w KQkq - 0 1");
             Console.WriteLine(chess.GetPositionFigure(2,5));
             while (true)
             {

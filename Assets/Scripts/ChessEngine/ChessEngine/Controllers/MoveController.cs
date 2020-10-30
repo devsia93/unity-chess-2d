@@ -7,11 +7,14 @@ namespace ChessEngine
         public Cell CurrentCell { get; private set; }
         public Cell NewCell { get; private set; }
         public Figure Transformation { get; private set; }
+        public Figure TransformatedFigure { get { return Transformation == Figure.none ? CurrentFigure : Transformation; } }
 
         public int DifferenceX {  get { return NewCell.x - CurrentCell.x; } }
         public int DifferenceY { get { return NewCell.y - CurrentCell.y; } }
         public int AbsDifferenceX { get { return Math.Abs(DifferenceX); } }
         public int AbsDifferenceY { get { return Math.Abs(DifferenceY); } }
+        public int SignX { get { return Math.Sign(DifferenceX); } }
+        public int SignY { get { return Math.Sign(DifferenceY); } }
 
 
         public MoveController(FigureOnCell figureOnCell, Cell newCell, Figure transformation = Figure.none)
@@ -34,8 +37,8 @@ namespace ChessEngine
 
         public override string ToString()
         {
-            return ((char)CurrentFigure).ToString() + CurrentCell.Name + 
-            NewCell.Name;
+            return ((char)CurrentFigure).ToString() + CurrentCell.Name +
+            NewCell.Name + (Transformation == Figure.none ? "" : ((char)Transformation).ToString());
         }
     }
 }

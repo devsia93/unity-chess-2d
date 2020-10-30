@@ -4,19 +4,19 @@ using System.Text;
 
 namespace ChessEngine
 {
-     class BoardController
+    class BoardController
     {
-        private Figure [,] figures;
+        protected Figure[,] figures;
 
-        public string Fen { get; private set; }
-        public Color CurrentMoveColor { get; private set; }
-        public bool CanCastlingA1 { get; private set; }
-        public bool CanCastlingH1 { get; private set; }
-        public bool CanCastlingA8 { get; private set; }
-        public bool CanCastlingH8 { get; private set; }
-        public Cell Enpassat { get; private set; }
-        public int DrawNumber { get; private set; }
-        public int MoveNumber { get; private set; }
+        public string Fen { get; protected set; }
+        public Color CurrentMoveColor { get; protected set; }
+        public bool CanCastlingA1 { get; protected set; }
+        public bool CanCastlingH1 { get; protected set; }
+        public bool CanCastlingA8 { get; protected set; }
+        public bool CanCastlingH8 { get; protected set; }
+        public Cell Enpassant { get; protected set; }
+        public int DrawNumber { get; protected set; }
+        public int MoveNumber { get; protected set; }
 
         public BoardController(string fen)
         {
@@ -28,14 +28,7 @@ namespace ChessEngine
 
         public BoardController Move(MoveController moveController)
         {
-            BoardController newBoardController = new BoardController(Fen);
-            newBoardController.SetFigureAtCell(moveController.CurrentCell, Figure.none);
-            newBoardController.SetFigureAtCell(moveController.NewCell, moveController.CurrentFigure);
-            newBoardController.CurrentMoveColor = CurrentMoveColor.FlipColor();
-            if (CurrentMoveColor == Color.Black)
-                newBoardController.MoveNumber++;
-            newBoardController.CreateNewFen();
-            return newBoardController;
+            return new Board(Fen, moveController);
         }
 
         public IEnumerable<FigureOnCell> YieldFiguresOnCell()
@@ -47,82 +40,11 @@ namespace ChessEngine
             }
         }
 
-        void CreateNewFen() 
-        {
-            this.Fen = GetFenFigures() + " " +
-            GetFenMoveColor() + " " +
-            GetFenCastlingFlags() + " " +
-            GetFenEnpassat() + " " +
-            GetFenDrawNumber() + " " +
-            GetFenMoveNumber();
-        }
-
-        private string GetFenEnpassat()
-        {
-            return this.Enpassat.Name;
-        }
-
-        private string GetFenMoveNumber()
-        {
-            return this.MoveNumber.ToString();
-        }
-
-        private string GetFenDrawNumber()
-        {
-            return this.DrawNumber.ToString();
-        }
-
-        private string GetFenCastlingFlags()
-        {
-            string flags = (CanCastlingA1 ? "Q" : "") +
-                (CanCastlingH1 ? "K" : "") +
-                (CanCastlingA8 ? "q" : "") +
-                (CanCastlingH8 ? "k" : "");
-            return flags == "" ? "-" : flags;
-        }
-
-        private string GetFenMoveColor()
-        {
-            return this.CurrentMoveColor == Color.White ? "w" : "b";
-        }
-
-        private string GetFenFigures()
-        {
-            StringBuilder sb = new StringBuilder();
-            for (int y = Constants.COUNT_SQUARES - 1; y >= 0; y--)
-            {
-                for (int x = 0; x < Constants.COUNT_SQUARES; x++)
-                    sb.Append(figures[x,y] == Figure.none ? 
-                    '1' : (char)figures[x, y]);
-                if (y > 0)
-                    sb.Append("/");
-            }
-            string emptyLine = GenerateEmptyLine();
-            for (int i = Constants.COUNT_SQUARES; i >= 2; i--)
-                sb.Replace(emptyLine.Substring(0, i), i.ToString());
-            return sb.ToString();
-
-        }
-
-        private string GenerateEmptyLine()
-        {
-            string result = string.Empty;
-            for (int i = 0; i < Constants.COUNT_SQUARES; i++)
-                result += "1";
-            return result;
-        }
-
         public Figure GetFigureAtCell(Cell cell)
         {
             if (cell.CheckOnBoard())
                 return figures[cell.x, cell.y];
             return Figure.none;
-        }
-
-        void SetFigureAtCell(Cell cell, Figure figure)
-        {
-            if (cell.CheckOnBoard())
-                figures[cell.x, cell.y] = figure;
         }
 
         void Initialise()
@@ -133,10 +55,9 @@ namespace ChessEngine
             InitFigures(parts[0]);
             InitMoveColor(parts[1]);
             InitCastlingFlags(parts[2]);
-            InitEnpassat(parts[3]);
+            InitEnpassant(parts[3]);
             InitDrawNumber(parts[4]);
             InitMoveDraw(parts[5]);
-            CurrentMoveColor = Color.White;
         }
 
         private void InitMoveDraw(string v)
@@ -149,9 +70,9 @@ namespace ChessEngine
             DrawNumber = int.Parse(v);
         }
 
-        private void InitEnpassat(string v)
+        private void InitEnpassant(string v)
         {
-            Enpassat = new Cell(v);
+            Enpassant = new Cell(v);
         }
 
         private void InitCastlingFlags(string v)
@@ -175,7 +96,157 @@ namespace ChessEngine
             string[] lines = v.Split('/');
             for (int y = Constants.COUNT_SQUARES - 1; y >= 0; y--)
                 for (int x = 0; x < Constants.COUNT_SQUARES; x++)
-                    figures[x, y] = (Figure)lines[(Constants.COUNT_SQUARES-1) - y][x];
+                    figures[x, y] = (Figure)lines[(Constants.COUNT_SQUARES - 1) - y][x];
+        }
+    }
+
+    class Board : BoardController
+    {
+        MoveController mc;
+
+        public Board(string fen, MoveController mc) : base(fen)
+        {
+            this.mc = mc;
+            DropEnpassant();
+            SetEnpassant();
+            MoveFigures();
+            ChangeCurrentMoveColor();
+            UpdateCastlingFlags();
+            ChangeMoveNumber();
+            CreateNewFen();
+        }
+
+        private void DropEnpassant()
+        {
+            if (mc.NewCell == Enpassant)
+                if (mc.CurrentFigure == Figure.whitePawn ||
+                mc.CurrentFigure == Figure.blackPawn)
+                    SetFigureAtCell(new Cell(mc.NewCell.x, mc.CurrentCell.y), Figure.none);
+        }
+
+        private void SetEnpassant()
+        {
+            Enpassant = Cell.none;
+            if (mc.CurrentFigure == Figure.whitePawn)
+                if (mc.CurrentCell.y == Constants.HORIZONTAL_FOR_WHITE_PAWN &&
+                mc.NewCell.y == Constants.HORIZONTAL_FOR_WHITE_PAWN + Constants.MAX_DIF_PAWN_Y)
+                    Enpassant = new Cell(mc.CurrentCell.x, mc.CurrentCell.y + 1);
+            if (mc.CurrentFigure == Figure.blackPawn)
+                if (mc.CurrentCell.y == Constants.HORIZONTAL_FOR_BLACK_PAWN &&
+                mc.NewCell.y == Constants.HORIZONTAL_FOR_BLACK_PAWN - Constants.MAX_DIF_PAWN_Y)
+                    Enpassant = new Cell(mc.CurrentCell.x, mc.CurrentCell.y - 1);
+        }
+
+        private void ChangeMoveNumber()
+        {
+            if (CurrentMoveColor == Color.Black)
+                MoveNumber++;
+        }
+
+        private void ChangeCurrentMoveColor()
+        {
+            CurrentMoveColor = CurrentMoveColor.FlipColor();
+        }
+
+        private void UpdateCastlingFlags()
+        {
+            switch (mc.CurrentFigure)
+            {
+                case Figure.whiteKing:
+                    CanCastlingA1 = false;
+                    CanCastlingH1 = false;
+                    return;
+                case Figure.whiteRook:
+                    CanCastlingA1 &= mc.CurrentCell != new Cell(0, 0);
+                    CanCastlingH1 &= mc.CurrentCell != new Cell(Constants.COUNT_SQUARES - 1, 0);
+                    return;
+                case Figure.blackKing:
+                    CanCastlingA8 = false;
+                    CanCastlingH8 = false;
+                    return;
+                case Figure.blackRook:
+                    CanCastlingA1 &= mc.CurrentCell != new Cell(0, Constants.COUNT_SQUARES - 1);
+                    CanCastlingH1 &= mc.CurrentCell != new Cell(Constants.COUNT_SQUARES - 1, Constants.COUNT_SQUARES - 1);
+                    return;
+                default: return;
+            }
+        }
+
+        private void MoveFigures()
+        {
+            SetFigureAtCell(mc.CurrentCell, Figure.none);
+            SetFigureAtCell(mc.NewCell, mc.TransformatedFigure);
+        }
+
+        private void SetFigureAtCell(Cell cell, Figure figure)
+        {
+            if (cell.CheckOnBoard())
+                figures[cell.x, cell.y] = figure;
+        }
+
+        private void CreateNewFen()
+        {
+            this.Fen = GetFenFigures() + " " +
+            GetFenMoveColor() + " " +
+            GetFenCastlingFlags() + " " +
+            GetFenEnpassat() + " " +
+            GetFenDrawNumber() + " " +
+            GetFenMoveNumber();
+        }
+
+        private string GetFenEnpassat()
+        {
+            return this.Enpassant.Name;
+        }
+
+        private string GetFenMoveNumber()
+        {
+            return this.MoveNumber.ToString();
+        }
+
+        private string GetFenDrawNumber()
+        {
+            return this.DrawNumber.ToString();
+        }
+
+        private string GetFenCastlingFlags()
+        {
+            string flags = (CanCastlingH1 ? "K" : "") +
+                (CanCastlingA1 ? "Q" : "") +
+                (CanCastlingH8 ? "k" : "") +
+                (CanCastlingA8 ? "q" : "");
+            return flags == "" ? "-" : flags;
+        }
+
+        private string GetFenMoveColor()
+        {
+            return this.CurrentMoveColor == Color.White ? "w" : "b";
+        }
+
+        private string GetFenFigures()
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int y = Constants.COUNT_SQUARES - 1; y >= 0; y--)
+            {
+                for (int x = 0; x < Constants.COUNT_SQUARES; x++)
+                    sb.Append(figures[x, y] == Figure.none ?
+                    '1' : (char)figures[x, y]);
+                if (y > 0)
+                    sb.Append("/");
+            }
+            string emptyLine = GenerateEmptyLine();
+            for (int i = Constants.COUNT_SQUARES; i >= 2; i--)
+                sb.Replace(emptyLine.Substring(0, i), i.ToString());
+            return sb.ToString();
+
+        }
+
+        private string GenerateEmptyLine()
+        {
+            string result = string.Empty;
+            for (int i = 0; i < Constants.COUNT_SQUARES; i++)
+                result += "1";
+            return result;
         }
     }
 }
