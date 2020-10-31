@@ -1,4 +1,5 @@
 ﻿using System;
+
 namespace ChessEngine
 {
      class Moves
@@ -23,7 +24,7 @@ namespace ChessEngine
             {
                 case Figure.whiteKing:
                 case Figure.blackKing:
-                    return CheckMovesKing();
+                    return CheckMovesKing() || CheckCanCastling();
                 case Figure.whiteQueen:
                 case Figure.blackQueen:
                     return CheckStraightMoves();
@@ -33,7 +34,7 @@ namespace ChessEngine
                     moveController.SignY == 0) && CheckStraightMoves();
                 case Figure.whiteBishop:
                 case Figure.blackBishop:
-                    return (moveController.SignX != 0 ||
+                    return (moveController.SignX != 0 &&
                    moveController.SignY != 0) && CheckStraightMoves();
                 case Figure.whiteKnight:
                 case Figure.blackKnight:
@@ -44,6 +45,87 @@ namespace ChessEngine
                 default:
                     return false;
             }
+        }
+
+        private bool CheckCanCastling()
+        {
+            if(moveController.CurrentFigure == Figure.whiteKing)
+            {
+                Cell whiteKingStartPosition = new Cell(Constants.WHITE_KING_START_POSITION);
+                Cell whiteCastlingPositionToRight = new Cell(whiteKingStartPosition.x +
+                    Constants.DIF_POSITION_KING_X_AFTER_CASTLING, whiteKingStartPosition.y);
+                Cell whiteCastlingPositionToLeft = new Cell(whiteKingStartPosition.x -
+                    Constants.DIF_POSITION_KING_X_AFTER_CASTLING, whiteKingStartPosition.y);
+
+                if (moveController.CurrentCell == whiteKingStartPosition //check can castling to right (white)
+                && moveController.NewCell == whiteCastlingPositionToRight)
+                    if (boardController.CanCastlingH1 && boardController.GetFigureAtCell(
+                    new Cell(Constants.COUNT_SQUARES-1, 0)) == Figure.whiteRook)
+                        if (checkCellsForEmpty(whiteKingStartPosition, whiteCastlingPositionToRight))
+                            if (!boardController.isCheck())
+                            if (!boardController.isCheckAfter(new MoveController(new FigureOnCell(
+                            Figure.whiteKing, whiteKingStartPosition), new Cell(whiteKingStartPosition.x+1, 0))))
+                                return true;
+
+                if (moveController.CurrentCell == whiteKingStartPosition //check can castling to left (white)
+               && moveController.NewCell == whiteCastlingPositionToLeft)
+                    if (boardController.CanCastlingA1 && boardController.GetFigureAtCell(
+                    new Cell(0, 0)) == Figure.whiteRook)
+                        if (checkCellsForEmpty(whiteKingStartPosition, whiteCastlingPositionToLeft))
+                        if (!boardController.isCheck())
+                            if (!boardController.isCheckAfter(new MoveController(new FigureOnCell(
+                            Figure.whiteKing, whiteKingStartPosition), new Cell(whiteKingStartPosition.x - 1, 0))))
+                            return true;
+            }
+            else if (moveController.CurrentFigure == Figure.blackKing)
+            {
+                Cell blackKingStartPosition = new Cell(Constants.BLACK_KING_START_POSITION);
+                Cell blackCastlingPositionToRight = new Cell(blackKingStartPosition.x +
+                    Constants.DIF_POSITION_KING_X_AFTER_CASTLING, blackKingStartPosition.y);
+                Cell blackCastlingPositionToLeft = new Cell(blackKingStartPosition.x -
+                    Constants.DIF_POSITION_KING_X_AFTER_CASTLING, blackKingStartPosition.y);
+
+                if (moveController.CurrentCell == blackKingStartPosition //check can castling to right (black)
+                && moveController.NewCell == blackCastlingPositionToRight)
+                    if (boardController.CanCastlingH8 && boardController.GetFigureAtCell(
+                    new Cell(Constants.COUNT_SQUARES - 1, Constants.COUNT_SQUARES - 1)) == Figure.blackRook)
+                        if (checkCellsForEmpty(blackKingStartPosition, blackCastlingPositionToRight))
+                            if (!boardController.isCheck())
+                            if (!boardController.isCheckAfter(new MoveController(new FigureOnCell(
+                            Figure.blackKing, blackKingStartPosition), new Cell(blackKingStartPosition.x + 1, Constants.COUNT_SQUARES-1))))
+                            return true;
+
+                if (moveController.CurrentCell == blackKingStartPosition //check can castling to left (black)
+               && moveController.NewCell == blackCastlingPositionToLeft)
+                    if (boardController.CanCastlingA8 && boardController.GetFigureAtCell(
+                    new Cell(0, Constants.COUNT_SQUARES - 1)) == Figure.blackRook)
+                        if (checkCellsForEmpty(blackKingStartPosition, blackCastlingPositionToLeft))
+                            if (!boardController.isCheck())
+                            if (!boardController.isCheckAfter(new MoveController(new FigureOnCell(
+                            Figure.blackKing, blackKingStartPosition), new Cell(blackKingStartPosition.x - 1, Constants.COUNT_SQUARES - 1))))
+                            return true;
+            }
+            return false;
+        }
+
+        private bool checkCellsForEmpty(Cell from, Cell rookPosition)
+        {
+            bool result = false;
+            int minX = from.x < rookPosition.x ? from.x : rookPosition.x;
+            int maxX = from.x > rookPosition.x ? from.x : rookPosition.x;
+            if (from.y == rookPosition.y) {
+                for (int i = minX+1; i < maxX; i++)
+                    if (boardController.GetFigureAtCell(new Cell(i, from.y)) != Figure.none) 
+                    {
+                        result = false;
+                        return result;
+                    }
+                    else
+                    {
+                        result = true;
+                    }
+            }
+            return result;
         }
 
         private bool CheckMovesPawn()

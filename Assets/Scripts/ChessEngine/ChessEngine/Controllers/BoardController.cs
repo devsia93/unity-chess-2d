@@ -60,6 +60,34 @@ namespace ChessEngine
             InitMoveDraw(parts[5]);
         }
 
+        public bool isCheckAfter(MoveController mc)
+        {
+            BoardController after = Move(mc);
+            return after.CanEatKing();
+        }
+
+        private bool CanEatKing()
+        {
+            Cell enemyKing = FindEnemyKing();
+            Moves moves = new Moves(this);
+            foreach (FigureOnCell fc in YieldFiguresOnCell())
+                if (moves.CanMove(new MoveController(fc, enemyKing)))
+                    return true;
+            return false;
+        }
+
+        private Cell FindEnemyKing()
+        {
+            Figure enemyKing = CurrentMoveColor == Color.White ? 
+            Figure.blackKing : Figure.whiteKing;
+            foreach (Cell cell in Cell.YieldBoardCells())
+            {
+                if (GetFigureAtCell(cell) == enemyKing)
+                    return cell;
+            }
+            return Cell.none;
+        }
+
         private void InitMoveDraw(string v)
         {
             MoveNumber = int.Parse(v);
@@ -98,6 +126,11 @@ namespace ChessEngine
                 for (int x = 0; x < Constants.COUNT_SQUARES; x++)
                     figures[x, y] = (Figure)lines[(Constants.COUNT_SQUARES - 1) - y][x];
         }
+
+        public bool isCheck()
+        {
+            return isCheckAfter(MoveController.none);
+        }
     }
 
     class Board : BoardController
@@ -111,9 +144,58 @@ namespace ChessEngine
             SetEnpassant();
             MoveFigures();
             ChangeCurrentMoveColor();
+            MoveCastlingRook();
             UpdateCastlingFlags();
             ChangeMoveNumber();
             CreateNewFen();
+        }
+
+        private void MoveCastlingRook()
+        {
+            if (mc.CurrentFigure == Figure.whiteKing)
+            {
+                Cell whiteKingStartPosition = new Cell(Constants.WHITE_KING_START_POSITION);
+                Cell whiteCastlingPositionToRight = new Cell(whiteKingStartPosition.x +
+                    Constants.DIF_POSITION_KING_X_AFTER_CASTLING, whiteKingStartPosition.y);
+                Cell whiteCastlingPositionToLeft = new Cell(whiteKingStartPosition.x -
+                    Constants.DIF_POSITION_KING_X_AFTER_CASTLING, whiteKingStartPosition.y);
+
+                if (mc.CurrentCell == whiteKingStartPosition //castling to right (white)
+                && mc.NewCell == whiteCastlingPositionToRight)
+                {
+                    SetFigureAtCell(new Cell(Constants.COUNT_SQUARES - 1, 0), Figure.none);
+                    SetFigureAtCell(new Cell(whiteCastlingPositionToRight.x - 1, 0), Figure.whiteRook);
+                }
+                else if (mc.CurrentCell == whiteKingStartPosition //castling to left (white)
+              && mc.NewCell == whiteCastlingPositionToLeft)
+                {
+                    SetFigureAtCell(new Cell(0, 0), Figure.none);
+                    SetFigureAtCell(new Cell(whiteCastlingPositionToLeft.x + 1, 0), Figure.whiteRook);
+                }
+            }
+            else if (mc.CurrentFigure == Figure.blackKing)
+            {
+                Cell blackKingStartPosition = new Cell(Constants.BLACK_KING_START_POSITION);
+                Cell blackCastlingPositionToRight = new Cell(blackKingStartPosition.x +
+                    Constants.DIF_POSITION_KING_X_AFTER_CASTLING, blackKingStartPosition.y);
+                Cell blackCastlingPositionToLeft = new Cell(blackKingStartPosition.x -
+                    Constants.DIF_POSITION_KING_X_AFTER_CASTLING, blackKingStartPosition.y);
+
+                if (mc.CurrentCell == blackKingStartPosition //castling to right (black)
+                && mc.NewCell == blackCastlingPositionToRight)
+                {
+                    SetFigureAtCell(new Cell(Constants.COUNT_SQUARES - 1, Constants.COUNT_SQUARES - 1), Figure.none);
+                    SetFigureAtCell(new Cell(blackCastlingPositionToRight.x - 1, Constants.COUNT_SQUARES - 1), Figure.blackRook);
+                }
+                else if (mc.CurrentCell == blackKingStartPosition //castling to left (black)
+              && mc.NewCell == blackCastlingPositionToLeft)
+                {
+                    SetFigureAtCell(new Cell(0, Constants.COUNT_SQUARES - 1), Figure.none);
+                    SetFigureAtCell(new Cell(blackCastlingPositionToLeft.x + 1, Constants.COUNT_SQUARES - 1), Figure.blackRook);
+                }
+
+            }
+
         }
 
         private void DropEnpassant()

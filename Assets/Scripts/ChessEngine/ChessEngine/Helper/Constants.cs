@@ -7,6 +7,10 @@ namespace ChessEngine
 
         public static readonly int DIF_KING_X = 1;
         public static readonly int DIF_KING_Y = 1;
+        public static readonly string WHITE_KING_START_POSITION = "e1";
+        public static readonly string BLACK_KING_START_POSITION = "e"+COUNT_SQUARES.ToString();
+        public static readonly int DIF_POSITION_KING_X_AFTER_CASTLING = 2;
+
 
         public static readonly int HORIZONTAL_FOR_WHITE_PAWN = 1;
         public static readonly int HORIZONTAL_FOR_BLACK_PAWN = 

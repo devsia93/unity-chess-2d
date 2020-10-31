@@ -3,6 +3,8 @@ namespace ChessEngine
 {
      class MoveController
     {
+        public static MoveController none = new MoveController();
+
         public Figure CurrentFigure { get; private set; }
         public Cell CurrentCell { get; private set; }
         public Cell NewCell { get; private set; }
@@ -16,6 +18,13 @@ namespace ChessEngine
         public int SignX { get { return Math.Sign(DifferenceX); } }
         public int SignY { get { return Math.Sign(DifferenceY); } }
 
+        private MoveController()
+        {
+            CurrentFigure = Figure.none;
+            CurrentCell = Cell.none;
+            NewCell = Cell.none;
+            Transformation = Figure.none;
+        }
 
         public MoveController(FigureOnCell figureOnCell, Cell newCell, Figure transformation = Figure.none)
         {

@@ -8,6 +8,10 @@ namespace ChessEngine
         BoardController boardController;
         Moves moves;
 
+        public bool IsCheck { get; private set; }
+        public bool IsCheckMate { get; private set; }
+        public bool IsStalemate { get; private set; }
+
         public string Fen 
         {
             get
@@ -20,12 +24,14 @@ namespace ChessEngine
         {
             boardController = new BoardController(fen);
             moves = new Moves(boardController);
+            UpdateCheckFlags();
         }
 
         Chess(BoardController boardController)
         {
             this.boardController = boardController;
             this.moves = new Moves(boardController);
+            UpdateCheckFlags();
         }
 
         public Chess Move(string move)
@@ -46,6 +52,18 @@ namespace ChessEngine
             return figure == Figure.none ? '.' : (char)figure;
         }
 
+        void UpdateCheckFlags()
+        {
+            IsCheck = boardController.isCheck();
+            IsCheckMate = false;
+            IsStalemate = false;
+            foreach (string moves in YieldValidMoves())
+                return;
+            if (IsCheck)
+                IsCheckMate = true;
+            else IsStalemate = true;
+        }
+
         public IEnumerable<string> YieldValidMoves()
         {
             foreach (FigureOnCell fc in boardController.YieldFiguresOnCell())
@@ -54,6 +72,7 @@ namespace ChessEngine
                     {
                         MoveController mc = new MoveController(fc, cell, transformation);
                         if (moves.CanMove(mc))
+                            if (!boardController.isCheckAfter(mc))
                             yield return mc.ToString();
                     }
         }
